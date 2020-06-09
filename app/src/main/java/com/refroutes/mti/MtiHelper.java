@@ -23,7 +23,7 @@ import de.infoware.android.mti.extension.MTIHelper;
  */
 
 @WorkerThread
-public class MtiCalls implements ApiListener, NavigationListener {
+public class MtiHelper implements ApiListener, NavigationListener {
     private int lastRefRouteId = -1;
     private int activeRefRouteId = 0;
     private ArrayList<RefRoute> refRoutes;
