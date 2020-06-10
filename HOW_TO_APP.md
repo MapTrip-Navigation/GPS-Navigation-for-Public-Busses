@@ -45,5 +45,5 @@ Diesem Zweck dient die Klasse MtiCallbackSynchronizer, die das 'Warten' auf den 
 Diese Klasse ist eine Beispiel-Implementierung, die im Zuge des Beispiel-App-Projekts entstanden ist. Sicherlich gibt es weitere Möglichkeiten, asynchrone Prozesse zu nutzen.
 
 ## Sonstige Klassen
-Die übrigen Klassen des Projekts dienen der Repräsentation, dem Dateihandling, Logging, Konfiguration etc.
+Die übrigen Klassen des Projekts implementieren die Repräsentationsschicht, Dateihandling, Logging, Konfiguration etc.
 Da die Beispiel-App die Funktionsweise und Möglichkeiten von MTI hervorheben soll, wird auf diese Klassen nicht weiter eingegangen.
