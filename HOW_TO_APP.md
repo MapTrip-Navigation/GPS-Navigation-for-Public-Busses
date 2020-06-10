@@ -17,11 +17,14 @@ Daher wurde die Beispiel-App zur Vereinfachung als __singleTask__ deklariert.
 ## MTI Lib
 Die Beispiel-App bedient sich des MapTrip Interface (MTI), das in Form einer vereinfachten API den Zugriff auf die Navigations-Features von MapTrip ermöglicht.
 Dazu wird die MTI Lib-Datei __mti.aar__ im Ordner app/libs abgelegt und als Dependency in das build.gradle (Module: app) aufgenommen:
-dependencies {
+
+  dependencies {
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    
     implementation "de.infoware:mti:8.4.3"
-...
-}
+    
+  }
 
 ## MtiHelper Class
 Die MTI-Funktionen arbeiten asynchron. Bei Funktionsaufruf wird sofort ein Rückgabewert geliefert, bei dem es sich in der Regel um eine sogenannte Request-ID handelt.
@@ -34,7 +37,7 @@ Die Klasse MtiHelper implementiert die Callback-Methoden und kapselt die Aufrufe
 Zusätzlich regelt die Klasse MtiHelper Teile der Anwendungslogik, was im Sinne eines guten Designs sicher besser in einer dedizierten Klasse aufgehoben wäre.
 
 ## MtiCallbackSynchronizer Class
-Wie bereits erwähnt arbeitet MTI asynchron.
+Wie bereits erwähnt arbeitet MTI asynchron
 Das heißt, dass die Callback-Methoden-Aufrufe nicht zwangsläufig in der selben Reihenfolge erfolgen, wie die MTI-Methoden aufgerufen wurden.
 Je nach Methode und Anwendungslogik kann es aber notwendig sein, dass die aufrufende Methode die eigene Bearbeitung erst dann fortsetzt, wenn der entsprechende Callback eintritt.
 
