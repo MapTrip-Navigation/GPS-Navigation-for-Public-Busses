@@ -20,12 +20,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.refroutes.R;
+import com.refroutes.RefRouteManager;
 import com.refroutes.file.RefRouteController;
 import com.refroutes.file.Settings;
 import com.refroutes.itemList.RefRoutesAdapter;
 import com.refroutes.log.Logger;
 import com.refroutes.model.RefRoute;
-import com.refroutes.mti.MtiHelper;
+import com.refroutes.mti.MtiCalls;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private boolean pauseButtonWasClicked = false;
     private boolean mtiInitialized = false;
 
-    private MtiHelper mtiHelper;
+    private RefRouteManager refRouteManager;
     private Logger logger;
 
     // ======================================================================================================
@@ -263,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         button.setText("FORTSETZEN");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
         isPaused = true;
-        mtiHelper.interruptRouting();
+        refRouteManager.interruptRouting();
     }
 
     private void buttonGoClicked() {
@@ -273,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         button.setText("PAUSE");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_NOT_DONE));
 
-        if (!mtiHelper.isWorking()) {
+        if (!refRouteManager.isWorking()) {
             refreshAllItems();
         }
 
@@ -290,12 +291,14 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void reactToMessageButton() {
-        if (mtiHelper.isMessageButtonClicked()) {
-            if (isRoutingActive) {
-                buttonPauseClicked();
-            }
-        }
-        mtiHelper.resetMessageButtonClick();
+//        if (refRouteManager.isMessageButtonClicked()) {
+//            if (isRoutingActive) {
+//                buttonPauseClicked();
+//            }
+//        }
+//        refRouteManager.resetMessageButtonClick();
+        refRouteManager.showMessageButton();
+
     }
 
     /*
@@ -309,18 +312,18 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
             // Last route was finished successfull
             case OK:
                 // mark route as finished
-                markItemDone(mtiHelper.getLastRefRouteId());
+                markItemDone(refRouteManager.getLastRefRouteId());
 
                 // If all routes done finish by waiting for user interaction
                 Switch autoPilot = findViewById(R.id.switchAutopilot);
-                if (!mtiHelper.nextRefRouteExists()) {
+                if (!refRouteManager.nextRefRouteExists()) {
                     resetRouting();
-                    mtiHelper.reset();
-                    hideMapTrip(mtiHelper);
+                    refRouteManager.reset();
+                    hideMapTrip(refRouteManager);
                 } else if (!autoPilot.isChecked()) {
                     // AutoPilot OFF: hide MapTrip and make a pause
                     pauseOnAutoPilotOff();
-                    hideMapTrip(mtiHelper);
+                    hideMapTrip(refRouteManager);
                 } else {
                     // AutoPilot ON: resume with next route
                     routeRefRoute(false);
@@ -329,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
             // last route was canceled
             case OPERATION_CANCELED:
-                markItemPaused(mtiHelper.getActiveRefRouteId());
+                markItemPaused(refRouteManager.getActiveRefRouteId());
                 break;
 
             default:
@@ -346,19 +349,19 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         logger.info("routeRefRoute", "see if there is to start a reference route; restartTour = " + restartTour);
         if (!restartTour) {
             logger.finest("routeRefRoute", "call mti.resetWorkingSwitch");
-            mtiHelper.resetWorkingSwitch();
+            refRouteManager.resetWorkingSwitch();
         }
 
-        if (mtiHelper.nextRefRouteExists()) {
+        if (refRouteManager.nextRefRouteExists()) {
             logger.finest("routeRefRoute", "one more reference route exists; routeItem");
-            int nextRefRouteId = mtiHelper.getNextRefRouteId();
+            int nextRefRouteId = refRouteManager.getNextRefRouteId();
             markItemInWork(nextRefRouteId);
-            routeItem(this, this.mtiHelper, nextRefRouteId, restartTour);
+            routeItem(this, this.refRouteManager, nextRefRouteId, restartTour);
         } else {
             logger.finest("routeRefRoute", "no more reference route exists; resetRouting, mtiCalls.reset");
             resetRouting();
-            mtiHelper.reset();
-            hideMapTrip(mtiHelper);
+            refRouteManager.reset();
+            hideMapTrip(refRouteManager);
         }
     }
 
@@ -462,9 +465,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
         Settings settings = new Settings(basePath + "/refroutechains.properties");
         // init worker
-        mtiHelper = new MtiHelper(this, refRoutes);
+        refRouteManager = new RefRouteManager(refRoutes);
 
-        initMti(this, mtiHelper, settings.getValue("startMapTrip", Boolean.TRUE));
+        initMti(this, refRouteManager, settings.getValue("startMapTrip", Boolean.TRUE));
     }
 
     /**
@@ -494,7 +497,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void setMapTripToFront() {
-        mtiHelper.showMessageButton();
+        refRouteManager.showMessageButton();
         logger.fine("setMapTripToFront", "bring MapTrip Companion to front as " + mapTripCompanionActivityClass);
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(mapTripAppSystemName, mapTripCompanionActivityClass));
@@ -601,14 +604,14 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     // ======================================================================================================
     // Threads
     // ======================================================================================================
-    private void hideMapTrip(final MtiHelper mtiHelper) {
+    private void hideMapTrip(final RefRouteManager refRouteManager) {
         serverThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Thread.currentThread().setName("HideMapThread");
                 String className = MainActivity.this.getClass().getCanonicalName();
                 String packageName = getPackageName();
-                mtiHelper.hideServer(packageName, className);
+                refRouteManager.showApp(packageName, className);
             }
         });
         serverThread.start();
@@ -622,13 +625,16 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
      * @param workerService Instance of the worker service
      * @param refRouteIndex Index of the route. Used to get the required informations which are stored in an array.
      */
-    private void routeItem(final MainActivity activity, final MtiHelper workerService, final int refRouteIndex, final boolean restartTour) {
+    private void routeItem(final MainActivity activity, final RefRouteManager refRouteManager, final int refRouteIndex, final boolean restartTour) {
         routingThread = new Thread(new Runnable() {
 
             @Override
             public void run() {
                 Thread.currentThread().setName("RoutingThread");
-                final ApiError result = workerService.routeItem(routesFileDirectory, refRouteIndex, restartTour);
+                String className = MainActivity.this.getClass().getCanonicalName();
+                String packageName = getPackageName();
+
+                final ApiError result = refRouteManager.routeItem(packageName, className, routesFileDirectory, refRouteIndex, restartTour);
                 // successfully routed, initialize next route
                 runOnUiThread(new Runnable() {
                     @Override
@@ -644,7 +650,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
 
     private ApiError checkMapTripRunning() {
-        ApiError findServerResult = mtiHelper.findServer();
+        ApiError findServerResult = refRouteManager.findServer();
         if (ApiError.COULD_NOT_FIND_SERVER == findServerResult || ApiError.TIMEOUT == findServerResult) {
             logger.info("initMti", "MapTrip not running, starting App");
             startMapTrip();
@@ -656,7 +662,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     /*
     Initialize MTI
      */
-    private void initMti(final MainActivity activity, final MtiHelper mtiHelper, final boolean startMapTripRequested) {
+    private void initMti(final MainActivity activity, final RefRouteManager refRouteManager, final boolean startMapTripRequested) {
         logger.info("initMti", "Initializing MTI");
 
         if (mtiInitialized) {
@@ -671,7 +677,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                 int retries = 0;
                 ApiError initMtiResult = ApiError.NOT_STARTED;
                 while (retries++ < 10 && ApiError.OK != initMtiResult) {
-                    initMtiResult = mtiHelper.initMti();
+                    initMtiResult = refRouteManager.initMti(activity);
                     if (startMapTripRequested) {
                         initMtiResult = checkMapTripRunning();
                     }

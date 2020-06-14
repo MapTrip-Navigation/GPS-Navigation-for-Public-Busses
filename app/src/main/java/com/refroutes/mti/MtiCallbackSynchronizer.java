@@ -1,5 +1,7 @@
 package com.refroutes.mti;
 
+import androidx.annotation.WorkerThread;
+
 import com.refroutes.log.Logger;
 
 import java.util.HashMap;
@@ -7,6 +9,7 @@ import java.util.logging.Level;
 
 import de.infoware.android.mti.enums.ApiError;
 
+@WorkerThread
 public class MtiCallbackSynchronizer {
     private static HashMap<Integer, Semaphore> map = new HashMap<>();
     private static MtiCallbackSynchronizer manager = new MtiCallbackSynchronizer();
@@ -76,9 +79,9 @@ public class MtiCallbackSynchronizer {
                 Thread.currentThread().setName("SemaphoreCreateWaiter");
 
                 Semaphore sem = null;
+                int i = 0;
                 while (sem == null) {
                     sem = manager.retrieveSemaphore(callBackOrRoute);
-                    int i = 0;
                     try {
                         Thread.sleep(200);
                         if (i++ > 2) {
@@ -117,7 +120,7 @@ public class MtiCallbackSynchronizer {
     public class Semaphore {
         private int callBackOrRoute;
         private String about;
-        private ApiError apiError;
+        private ApiError apiError = ApiError.OK;
         private boolean interruptedByUser = false;
         private boolean interruptedByError = false;
         private boolean interruptedByTimeOut = false;

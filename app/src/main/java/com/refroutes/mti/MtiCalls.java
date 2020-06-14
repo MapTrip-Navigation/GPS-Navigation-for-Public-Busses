@@ -4,12 +4,8 @@ import android.content.Context;
 
 import androidx.annotation.WorkerThread;
 
-import com.refroutes.model.RefRoute;
+import com.refroutes.RefRouteManager;
 import com.refroutes.log.Logger;
-import com.refroutes.MainActivity;
-
-import java.util.ArrayList;
-
 import de.infoware.android.mti.Api;
 import de.infoware.android.mti.ApiListener;
 import de.infoware.android.mti.Navigation;
@@ -18,105 +14,77 @@ import de.infoware.android.mti.enums.ApiError;
 import de.infoware.android.mti.enums.Info;
 import de.infoware.android.mti.extension.MTIHelper;
 
-/**
- * Works at reference routes
- */
-
 @WorkerThread
-public class MtiHelper implements ApiListener, NavigationListener {
-    private int lastRefRouteId = -1;
-    private int activeRefRouteId = 0;
-    private ArrayList<RefRoute> refRoutes;
-    private boolean isWorking = false;
-    private static Context context;
+public class MtiCalls implements ApiListener, NavigationListener {
+    public static int CALLBACK_ON_ERROR = 1;
+    public static int CALLBACK_INIT = 2;
+    public static int CALLBACK_UNINIT = 3;
+    public static int CALLBACK_SHOW_APP = 4;
+    public static int CALLBACK_DESTINATION_REACHED = 5;
+    public static int CALLBACK_STOP_NAVIGATION = 6;
+    public static int CALLBACK_STATUS_INFO = 7;
+    public static int CALLBACK_INFO = 8;
+    public static int CALLBACK_CUSTOM_FUNCTION = 10;
+
     private static boolean isMtiInitialized = false;
-    private boolean messageButtonClicked = false;
+    private RefRouteManager refRouteManager;
 
-    private Logger logger = Logger.createLogger("RefRouteWorkerService");
+    private Logger logger = Logger.createLogger("MtiCalls");
 
-    public void reset() {
-        lastRefRouteId = -1;
-        activeRefRouteId = 0;
-        isWorking = false;
-    }
-
-    public MtiCalls(MainActivity mainActivity, ArrayList<RefRoute> refRoutes) {
-        this.context = mainActivity;
-        this.refRoutes = refRoutes;
-    }
-
-    public boolean isWorking() {
-        return isWorking;
-    }
-
-    public boolean isMessageButtonClicked() {
-        return messageButtonClicked;
-    }
-
-    public void resetMessageButtonClick() {
-        messageButtonClicked = false;
-    }
-
-    // ======================================================================================================
-    // React to user actions
-    // ======================================================================================================
-
-    public void resetWorkingSwitch() {
-        isWorking = true;
-    }
-
-    public int getLastRefRouteId() {
-        return lastRefRouteId;
-    }
-
-    @WorkerThread
-    public boolean nextRefRouteExists() {
-        while (activeRefRouteId < refRoutes.size()) {
-            if (refRoutes.get(activeRefRouteId).isActive()) {
-                return true;
-            }
-            ++activeRefRouteId;
-        }
-        return false;
-    }
-
-    @WorkerThread
-    public int getNextRefRouteId() {
-        while (activeRefRouteId < refRoutes.size()) {
-            if (refRoutes.get(activeRefRouteId).isActive()) {
-                break;
-            }
-            activeRefRouteId++;
-        }
-        return activeRefRouteId;
-    }
-
-    public int getActiveRefRouteId() {
-        return activeRefRouteId;
+    public MtiCalls (RefRouteManager refRouteManager) {
+        this.refRouteManager = refRouteManager;
     }
 
     // ======================================================================================================
     // MTI Provided Methods
     // ======================================================================================================
 
-    private static int CALLBACK_ON_ERROR = 1;
-    private static int CALLBACK_INIT = 2;
-    private static int CALLBACK_UNINIT = 3;
-    private static int CALLBACK_SHOW_APP = 4;
-    private static int CALLBACK_DESTINATION_REACHED = 5;
-    private static int CALLBACK_STOP_NAVIGATION = 6;
-    private static int CALLBACK_STATUS_INFO = 7;
-    private static int CALLBACK_INFO = 8;
-    private static int CALLBACK_CUSTOM_FUNCTION = 10;
-
-    private int startReferenceId = -1;
-
     public ApiError findServer() {
         logger.finest("findServer", "findServer()");
         int findServerId = Api.findServer();
         MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(findServerId, "Api.findServer");
         return semaphore.waitForCallback(null);
+    }
 
+    public ApiError startReferenceRoute(String refRouteFileName, boolean restartTour, Long waitTime) {
+        int startReferenceRouteId = Navigation.startReferenceRoute(refRouteFileName, restartTour);
+        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(startReferenceRouteId, "Navigation.startReferenceRoute");
+        return semaphore.waitForCallback(waitTime);
+    }
+
+    public ApiError getCurrentDestination(Long waitTime) {
+        int getCurrentDestinationId = Navigation.getCurrentDestination();
+        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(getCurrentDestinationId, "Navigation.getCurrentDestination");
+        return semaphore.waitForCallback(waitTime);
+    }
+
+    public ApiError stopNavigation(Long waitTime){
+        int stopNavigationId =  Navigation.stopNavigation();
+        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(stopNavigationId, "Navigation.stopNavigation");
+
+        if (null != waitTime) {
+            return semaphore.waitForCallback(waitTime);
+        }
+        return ApiError.OK;
+    }
+
+    public ApiError removeAllDestinationCoordinates(Long waitTime) {
+        int removeAllDestinationCoordinatesId = Navigation.removeAllDestinationCoordinates();
+        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(removeAllDestinationCoordinatesId, "Navigation.removeAllDestinationCoordinates");
+        if (null != waitTime) {
+            return semaphore.waitForCallback(waitTime);
+        }
+        return ApiError.OK;
+    }
+
+    public ApiError waitForDestinationReached() {
+        return MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_DESTINATION_REACHED, "Const: CALLBACK_DESTINATION_REACHED").waitForCallback(null);
+    }
+
+    public void interruptRoutingByUser() {
+        MtiCallbackSynchronizer.setInterruptedByUser(CALLBACK_DESTINATION_REACHED);
+        stopNavigation(null);
+        removeAllDestinationCoordinates(null);
     }
 
     /**
@@ -124,7 +92,7 @@ public class MtiHelper implements ApiListener, NavigationListener {
      * Waits until MTI is available. Means that this can block the whole App.
      * @return The ApiError as received by MTI
      */
-    public ApiError initMti() {
+    public ApiError initMti(Context context) {
         if (!isMtiInitialized) {
             MTIHelper.initialize(context);
             isMtiInitialized = true;
@@ -134,17 +102,11 @@ public class MtiHelper implements ApiListener, NavigationListener {
         Navigation.registerListener(this);
         MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_INIT, "Api.init");
 
-//        isMtiInitialized = true;
         ApiError result =  semaphore.waitForCallback(null);
         Api.customFunction("packageName", "com.refroutes");
-        Api.customFunction("className", "com.refroutes.MainActivity");
+        Api.customFunction("className", "com.refroutes.main.MainActivity");
 
         return result;
-    }
-
-    public void showMessageButton () {
-        Api.customFunction("buttonMessage", "true");
-        messageButtonClicked = false;
     }
 
     private void uninitMti() {
@@ -153,53 +115,16 @@ public class MtiHelper implements ApiListener, NavigationListener {
         semaphore.waitForCallback(new Long(5000));
     }
 
-    public ApiError hideServer (String packageName, String className) {
-        int hideServerRequestId = Api.showApp(packageName, className);
+    public ApiError hideServer (Long waitTime) {
+        int hideServerRequestId = Api.hideServer();
         MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.hideServer");
+        return semaphore.waitForCallback(waitTime);
+    }
+
+    public ApiError showApp (String packageName, String className, Long waitTime) {
+        int hideServerRequestId = Api.showApp(packageName, className);
+        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.showApp");
         return semaphore.waitForCallback();
-    }
-
-    public void interruptRouting() {
-        MtiCallbackSynchronizer.setInterruptedByUser(CALLBACK_DESTINATION_REACHED);
-        Navigation.stopNavigation();
-        Navigation.removeAllDestinationCoordinates();
-    }
-
-    /**
-     * Start routing
-     */
-    @WorkerThread
-    public ApiError routeItem(String routesPath, Integer routeId, boolean restartTour) {
-        int currentDestRequestId = Navigation.getCurrentDestination();
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(currentDestRequestId, "Navigation.getCurrentDestination");
-        if (ApiError.NO_DESTINATION != semaphore.waitForCallback(new Long(10000))) {
-            Navigation.stopNavigation();
-            MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_STOP_NAVIGATION, "Const: CALLBACK_STOP_NAVIGATION").waitForCallback(new Long(1000));
-            int removeRequestId = Navigation.removeAllDestinationCoordinates();
-            MtiCallbackSynchronizer.getSemaphoreForCallBack(removeRequestId, "Navigation.removeAllDestinationCoordinates").waitForCallback(new Long(10000));
-        }
-
-        String refRouteFileName = routesPath + "/" + refRoutes.get(routeId).getRefRouteFileName();
-        startReferenceId = Navigation.startReferenceRoute(refRouteFileName, !restartTour);
-        logger.finest("routeItem", "refRouteFileName = " + refRouteFileName + "; routeId = " + startReferenceId);
-
-        ApiError waitForStartResult =  MtiCallbackSynchronizer.getSemaphoreForCallBack(startReferenceId, "Navigation.startReferenceRoute").waitForCallback(null);
-        if (waitForStartResult == ApiError.OK) {
-            ApiError waitForCallBack = MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_DESTINATION_REACHED, "Const: CALLBACK_DESTINATION_REACHED").waitForCallback(null);
-            switch (waitForCallBack) {
-                case OK:
-                    refRoutes.get(routeId).setFinished(true);
-                    lastRefRouteId = activeRefRouteId;
-                    ++activeRefRouteId;
-                    return ApiError.OK;
-
-                default:
-                    return waitForCallBack;
-            }
-        }
-        logger.warn("routeItem", "waitForStartResult = " + waitForStartResult.name() + "; routeId = " + startReferenceId);
-        Api.hideServer();
-        return waitForStartResult;
     }
 
     private void callBackCalled(int callBackOrRoute, String info, ApiError apiError, String logInfo) {
@@ -207,6 +132,9 @@ public class MtiHelper implements ApiListener, NavigationListener {
         MtiCallbackSynchronizer.callBackCalled(callBackOrRoute, info, apiError != null ? apiError : ApiError.OK, logInfo);
     }
 
+    public void showMessageButton () {
+        Api.customFunction("buttonMessage", "true");
+    }
 
     // ======================================================================================================
     // Implementations of MTI Interface
@@ -298,12 +226,12 @@ public class MtiHelper implements ApiListener, NavigationListener {
 
     @Override
     public void customFunctionResult(int i, String s, String s1, ApiError apiError) {
-        callBackCalled(CALLBACK_CUSTOM_FUNCTION, "i = " + i + "s = " + s + "s1 = " + s1, null, "infoMsg");
+        callBackCalled(CALLBACK_CUSTOM_FUNCTION, "i = " + i + "s = " + s + "s1 = " + s1, null, "customFunctionResult");
     }
 
     @Override
     public void infoMsg(Info info, int i) {
-        messageButtonClicked = true;
+        refRouteManager.setMessageButtonClicked(true);
 //        callBackCalled(CALLBACK_INFO, "info: " + info + "; i = " + i, null, "infoMsg");
     }
 

@@ -5,8 +5,6 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.refroutes.MainActivity;
-
 public class SplashScreenActivity extends AppCompatActivity {
 
     @Override
