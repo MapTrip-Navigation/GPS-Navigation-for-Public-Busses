@@ -20,13 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.refroutes.R;
-import com.refroutes.RefRouteManager;
 import com.refroutes.file.RefRouteController;
 import com.refroutes.file.Settings;
 import com.refroutes.itemList.RefRoutesAdapter;
 import com.refroutes.log.Logger;
 import com.refroutes.model.RefRoute;
-import com.refroutes.mti.MtiCalls;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
