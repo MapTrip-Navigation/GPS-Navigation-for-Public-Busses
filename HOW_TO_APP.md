@@ -37,13 +37,13 @@ Die Klasse MtiHelper implementiert die Callback-Methoden und kapselt die Aufrufe
 Zusätzlich regelt die Klasse MtiHelper Teile der Anwendungslogik, was im Sinne eines guten Designs sicher besser in einer dedizierten Klasse aufgehoben wäre.
 
 ## MtiCallbackSynchronizer Class
-Wie bereits erwähnt arbeitet MTI asynchron
+Wie bereits erwähnt, arbeitet MTI asynchron.
 Das heißt, dass die Callback-Methoden-Aufrufe nicht zwangsläufig in der selben Reihenfolge erfolgen, wie die MTI-Methoden aufgerufen wurden.
 Je nach Methode und Anwendungslogik kann es aber notwendig sein, dass die aufrufende Methode die eigene Bearbeitung erst dann fortsetzt, wenn der entsprechende Callback eintritt.
 
 Diesem Zweck dient die Klasse MtiCallbackSynchronizer, die das 'Warten' auf den Callback ermöglicht, wahlweise mit Timeouts.
-Diese Klasse ist eine Beispiel-Implementierung, die im Zuge des Beispiel-App-Projekts entstanden ist. Sicherlich gibt es weitere Möglichkeiten, asynchrone Prozesse zu nutzen.
+Diese Klasse ist eine Beispiel-Implementierung, die im Zuge des Beispiel-App-Projekts entstanden ist. Sicherlich gibt es weitere Möglichkeiten, asynchrone Prozesse zu orchestrieren.
 
 ## Sonstige Klassen
-Die übrigen Klassen des Projekts dienen der Repräsentation, dem Dateihandling, Logging, Konfiguration etc.
+Die übrigen Klassen des Projekts implementieren die Repräsentationsschicht, Dateihandling, Logging, Konfiguration etc.
 Da die Beispiel-App die Funktionsweise und Möglichkeiten von MTI hervorheben soll, wird auf diese Klassen nicht weiter eingegangen.
