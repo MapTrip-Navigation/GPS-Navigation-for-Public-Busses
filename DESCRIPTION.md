@@ -1,84 +1,82 @@
-# Referenzrouten-Beispiel-App
-Hinweise zur Installation und Benutzung der Beispiel-App
+# Reference Routes Sample App
+Notes on installing and using the example app
 
-Zum direkten Testen der Anwendung ohne build-Prozess kann das APK herunter geladen und unter Android installiert werden.
-Dazu stehen vorbereitete Konfigurationsdateien sowie Referenzrouten zur Verfügung.
-Mit entsprechenden Simulationsprogrammen (z.B. Lockito) können GPS-Signale generiert werden, die von MapTrip zur Navigation ausgewertet werden.
+To test the application directly without the build process, the APK can be downloaded and installed on Android.
+Prepared configuration files and reference routes are available for this purpose.
+With appropriate simulation programs (e.g. Lockito) GPS signals can be generated, which are evaluated by MapTrip for navigation.
 
 ## Installation
-Das APK (_refroutechains.apk_) liegt im Ordner _app/release_.
-* Kopieren des APK auf den Gerätespeicher und durch Anklicken die Installation starten.
-* Nach der Installation die Beispiel-App starten, damit die Dateistruktur im Gerätespeicher angelegt wird.
-* Die Fehlermeldung der Beispiel-App ignorieren und die Beispiel-App beenden.
+The APK (_refroutechains.apk_) is located in the _app/release_ folder.
+* Copy the APK to the device memory and click to start the installation.
+* After installation, start the sample app to create the file structure in the device memory.
+* Ignore the error message of the example app and close the example app.
 
-Die Beispiel-Konfiguration und die vorbereiteten Referenzrouten liegen im Ordner _sampleConfig_.
-* Kopieren des Inhalts (Ordner _routes_ und _properties_-Dateien) auf den Gerätespeicher in den Ordner _/Android/data/com.refroutes/files_.
+The example configuration and the prepared reference routes are in the _sampleConfig_ folder.
+* Copy the contents (_routes_ folder and _properties_ files) to the device memory in the _/Android/data/com.refroutes/files_ folder.
 
-## Konfiguration
-### Referenzrouten
-Die Referenzrouten werden als Dateien mit der Endung .nmea oder .csv im Ordner _routes_ abgelegt.
-In der Datei _refroutes.csv_ werden die Referenzrouten in der von der Navigation zu berücksichtigenden Reihenfolge abgelegt.
-Existiert die Datei _refroutes.csv_ nicht, wird sie auf Basis der im Ordner liegenden Referenzrouten generiert.
-Die Reihenfolge kann komfortabel über die GUI der Beispiel-App festgelegt werden.
+## Configuration
+### Reference routes
+The reference routes are stored as files with the extension .nmea or .csv in the _routes_ folder.
+The reference routes are stored in the _refroutes.csv_ file in the order in which they are to be considered by the navigation.
+If the _refroutes.csv_ file does not exist, it is generated based on the reference routes in the folder.
+The sequence can be conveniently defined using the GUI of the example app.
 
 ### refroutechains.properties
-Beeinflusst das Verhalten der Anwendung
+Influences the behavior of the application
 startMapTrip=:TRUE|FALSE:
-* TRUE: die Anwendung MapTrip wird bei Bedarf durch die Beispiel-App gestartet (default)
-* FALSE: das automatische Starten von MapTrip wird unterdrückt und muss bei Bedarf manuell erfolgen
+* TRUE: the MapTrip application is started by the example app if required (default)
+* FALSE: the automatic start of MapTrip is suppressed and must be started manually if necessary
 
 ### logging.properties
 loggingFileName=:path of logfile:
-* Relativer Pfad des logfiles. Ohne Angabe eines Slash / vor einer optionalen Pfadangabe
-* Beispiel: loggingFileName=log/logging.log
+* Relative path of the logfile. Without specification of a slash / before an optional path
+* Example: loggingFileName=log/logging.log
 
 logLevel=:LogLevel:
-* log level wie in java.util.logging definiert
-* Beispiel: logLevel=FINEST
+* log level as defined in java.util.logging
+* Example: logLevel=FINEST
 
 maxFileSize=:max file size:
-* Maximale Größe einer Log-Datei bevor Rotiert wird. Die Größe ist eine Circa-Angabe und nicht auf das Byte genau.
-* Beispiel: maxFileSize=1000000
+* Maximum size of a log file before rotation. The size is an approximate value and not exact to the byte.
+* Example: maxFileSize=1000000
 
-## Benutzung
-### GUI Elemente
-Die GUI der Beispiel-App besteht im Wesentlichen aus drei Elementen.
-* Switch-Button zur Aktivierung des Modus Autopilot (s.a. Modi)
-* Liste zur Darstellung und Bearbeitung der Referenzrouten
-* Aktions-Button zum Starten, Pausieren und Fortsetzen der Navigation. Die Beschriftung des Buttons wechselt je nach Anwendungsstatus zwischen __GO__, __PAUSE__ und __FORTSETZEN__.
+## Use
+### GUI elements
+The GUI of the example app essentially consists of three elements.
+* Switch button to activate the autopilot mode (see also Modes)
+* List for displaying and editing the reference routes
+* Action button to start, pause and continue navigation. The button label changes between __GO__, __PAUSE__, and __RESUME__ depending on the application status.
 
-### Auflistung der Referenzrouten
-* Die Zielführung der Referenzrouten erfolgt in der dargestellten Reihenfolge.
-* Die Reihenfolge kann durch Ziehen (kurzes Gedrückt-Halten und dann Ziehen) verändert werden.
-* Die Reihenfolge wird bei jeder Änderung persistiert.
-* Die Zielführung berücksichtigt nur die mit einem Haken aktivierten Routen.
-* Referenzrouten können durch das Mülleimer-Symbol aus der Liste gelöscht werden.
-* Aktuell ist das Hinzufügen von Referenzrouten lediglich manuell durch Eintragen in die Datei _refroutes.csv_ möglich. Eventuell ist es einfacher, diese Datei zu Löschen und die Beispiel-App neu zu starten, wodurch die Datei neu generiert wird.
+### Listing of reference routes
+* The reference routes are guided to their destinations in the order shown.
+* The order can be changed by dragging (press and hold briefly and then drag).
+* The order is persisted with each change.
+* Only routes activated with a check mark are taken into account.
+* Reference routes can be deleted from the list with the trashcan symbol.
+* Currently, adding reference routes is only possible manually by entering them in the _refroutes.csv_ file. It may be easier to delete this file and restart the example app, which will regenerate the file.
 
 ### Navigation
-* Voraussetzung für eine funktionierende Navigation ist, dass MapTrip gestartet wurde.
-* Dass MapTrip aktiv ist, wird durch die grüne Beschriftung des Aktions-Buttons signalisiert (die ansonsten grau/schwarz ist).
-* Mit Klick auf den Button __GO__ erfolgt die initiale Zielführung einer Referenzroute. Die Route wird farblich __lila__ markiert und die Navigation gestartet. Dazu wird MapTrip in den Vordergrund geholt.
-* Die initiale Zielführung (also Klick auf __GO__) beginnt beim Startpunkt der Referenzroute. Das bedeutet, MapTrip navigiert zum Startpunkt der Route und von dort weiter die Route entlang (s.a. Pause).
-* Referenzrouten, deren Navigation abgeschlossen ist, werden __grün__ dargestellt.
-* Wurden alle Referenzrouten erreicht, wird bei Klick auf den Button __GO__ der farblich dargestellte Status aller Einträge zurück gesetzt und die Zielführung beginnt erneut mit der ersten Route.
+* Prerequisite for a functioning navigation is that MapTrip has been started.
+* That MapTrip is active is indicated by the green label of the action button (which is otherwise grey/black).
+* Clicking on the __GO__ button initiates the initial routing of a reference route. The route is highlighted in __purple__ and navigation is started. For this purpose MapTrip is brought into the foreground.
+* The initial routing (i.e. click on __GO__) starts at the starting point of the reference route. This means that MapTrip navigates to the starting point of the route and from there continues along the route (see also Pause).
+* Reference routes whose navigation is complete are displayed __green__.
+* If all reference routes have been reached, clicking the __GO__ button resets the status of all entries shown in colour and navigation starts again with the first route.
 
 ### Pause
-* Nach Start der Navigation einer Referenzroute wechselt die Beschriftung des Aktions-Buttons auf __PAUSE__.
-* Wird die aktive Navigation einer Referenzroute pausiert, wechselt die farbliche Darstellung der Route auf __orange__ und die Beschriftung des Aktions-Buttons auf __FORTSETZEN__.
-* Klick auf __FORTSETZEN__ setzt die Zielführung fort. Wurde die Referenzroute verlassen (z.B. um eine Mittagspause abseits der Route abzuhalten), wird - im Gegensatz zur initialen Zielführung - beim fortgesetzter Zielführung zum nächstgelegenen Punkt der Referenzroute navigiert und nicht zum Startpunkt der Referenzroute.
+* After starting navigation of a reference route, the label of the action button changes to __PAUSE__.
+* If active navigation of a reference route is paused, the color display of the route changes to __orange__ and the label of the action button changes to __CONTINUE__.
+* Clicking on __Continue__ resumes navigation. If the reference route has been left (e.g. to take a lunch break off the route), continued navigation will navigate to the nearest point on the reference route and not to the starting point of the reference route - in contrast to initial navigation.
 
-### Modi
-Die Beispiel-App kennt zwei Betriebsmodi, die sich auf das Verhalten bei Zielerreichung auswirken.
-* Etappenmodus; die Referenzrouten werden wie Etappen behandelt. Das heißt, dass nach erfolgreicher Zielführung einer Referenzroute mit MapTrip die Beispiel-App in den Vordergrund geholt wird, damit der Anwender manuell die nächste Route starten kann.
-Dieser Modus eignet sich zum Beispiel gut für die Simulation einer Bus-Navigation, da bei Erreichen der Bushaltestelle nicht sofort die Navigation zum nächsten Ziel erfolgen soll.
-* Autopilot; die Referenzrouten werden direkt nacheinander abgearbeitet. Die Beispiel-App wird erst nach Erreichung des letzten Ziels in den Vordergrund geholt.
-Dieser Modus simuliert das Verhalten einer Müll-Entsorgungs-Navigation, die den Fahrer kontinuierlich von einem Teilstück der Gesamtroute zum nächsten führt.
+### Modes
+The example app has two operating modes that affect the behavior when targets are reached.
+* Stage mode; the reference routes are treated like stages. This means that after successfully navigating a reference route with MapTrip, the example app is brought to the foreground so that the user can manually start the next route.
+This mode is well suited for simulating bus navigation, for example, because navigation to the next destination should not take place immediately after reaching the bus stop.
+* Autopilot; the reference routes are processed directly one after the other. The example app is only brought to the foreground after the last destination has been reached.
+This mode simulates the behavior of a garbage disposal navigation, which continuously guides the driver from one section of the overall route to the next.
 
-### Wechseln zwischen der Anwendung und MapTrip
-Das Gesamtkonzept der Lösung basiert auf dem effizienten Zusammenspiel der Beispiel-App und MapTrip.
-Je nach Situation bzw. Status muss entweder die Beispiel-App oder MapTrip dem Anwender für die Benutzung zur Verfügung stehen.
-Wie in den Abschnitten `Navigation` und `Modi` erklärt, erfolgt der Wechsel zwischen den beiden Anwendungen im Betrieb automatisiert bzw. durch Betätigen des Aktions-Buttons (__GO__, __FORTSETZEN__).
-Zusätzlich kann der Anwender aber bei Bedarf (zum Beispiel um zu Pausieren), MapTrip in den Hintergrund schicken und die Beispiel-App in den Vordergrund holen. Dazu steht in der Kartenansicht von MapTrip ein Button mit einer Sprechblase als Symbol zur Verfügung.
-
-
+### Switch between the app and MapTrip
+The overall concept of the solution is based on the efficient interaction of the example app and MapTrip.
+Depending on the situation or status, either the example app or MapTrip must be available for the user to use.
+As explained in the sections 'Navigation' and 'Modes', switching between the two applications during operation is automated or is done by pressing the action button (__GO__, __Continue__).
+In addition, however, the user can, if necessary (for example, to pause), send MapTrip to the background and bring the example app to the foreground. For this purpose, a button with a speech bubble as symbol is available in the map view of MapTrip.
