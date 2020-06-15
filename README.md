@@ -1,17 +1,19 @@
 # RefRouteChains
 ## About
-Navigation aufeinanderfolgender Referenzrouten
+Navigation of successive reference routes
 
-Diese Android Beispiel-App zeigt, wie einfach die Entwicklung einer individuellen Navigationslösung unter Verwendung des MapTrip Interface (MTI) ist.
+This Android sample app shows how easy it is to develop a custom navigation solution using the MapTrip Interface (MTI).
 
-In der Realität könnten mit dieser Navigationslösung Autobusse von Haltestelle zu Haltestelle oder Müllentsorgungsfahrzeuge auf ihrer Tour geführt werden. Voraussetzung ist die gleichzeitige Installation der Navigationssoftware MapTrip von infoware.
+In reality, this navigation solution could be used to guide buses from stop to stop or waste disposal vehicles on their tour. A prerequisite is the simultaneous installation of the navigation software MapTrip from infoware.
 
-Zur Aufzeichnung der Referenzrouten stellt die Firma infoware GmbH diverse Werkzeuge zur Verfügung.
+The company infoware GmbH provides various tools for recording the reference routes.
 
-Die Entwicklung erfolgte im Android Studio von JetBrains.
+The development took place in the Android Studio of JetBrains.
 
-## Beschreibung der Anwendung
-Weitere Details über die Anwendung selbst stehen in der Datei DESCRIPTION.md.
+## Description of the application
+More details about the application itself are in the file DESCRIPTION.md.
 
 ## Integration MTI
-Das Einbinden des MapTrip Interface in die App wird im Dokument HOW_TO_APP erläutert.
+The integration of the MapTrip interface into the app is explained in the document HOW_TO_APP.
+
+Translated with www.DeepL.com/Translator (free version)
