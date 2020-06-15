@@ -1,11 +1,11 @@
-# Realisierung der Beispiel-App mit MTI
-Dieses Dokument beschreibt die Besonderheiten der Beispiel-App bzw. welche Komponenten daran beteiligt sind und wie.
-Ausreichende Kenntnisse über die Entwicklung von Apps unter Android werden vorausgesetzt.
-Die Beispiel-App wurde mit Java implementiert.
+# Implementation of the example app with MTI
+This document describes the special features of the example app, or which components are involved and how.
+Sufficient knowledge about developing apps on Android is assumed.
+The example app was implemented with Java.
 
 ## AndroidManifest
-Die Beispiel-App ist statusbehaftet und verwendet lokale Variablen. Durch das Zusammenspiel mit MapTrip wird sie häufig in den Vordergrund bzw. Hintergrund geschickt.
-Daher wurde die Beispiel-App zur Vereinfachung als __singleTask__ deklariert.
+The example app has status and uses local variables. Due to the interaction with MapTrip it is often sent to the foreground or background.
+Therefore, the example app has been declared as __singleTask__ for simplicity.
         <activity
             android:name=".main.MainActivity"
             android:launchMode="singleTask"
@@ -15,35 +15,35 @@ Daher wurde die Beispiel-App zur Vereinfachung als __singleTask__ deklariert.
  
 
 ## MTI Lib
-Die Beispiel-App bedient sich des MapTrip Interface (MTI), das in Form einer vereinfachten API den Zugriff auf die Navigations-Features von MapTrip ermöglicht.
-Dazu wird die MTI Lib-Datei __mti.aar__ im Ordner app/libs abgelegt und als Dependency in das build.gradle (Module: app) aufgenommen:
+The example app uses the MapTrip Interface (MTI), which provides access to the navigation features of MapTrip in the form of a simplified API.
+The MTI lib file __mti.aar__ is stored in the app/libs folder and included as a dependency in the build.gradle (Module: app):
 
   dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     
-    implementation "de.infoware:mti:8.4.3"
+    implementation "en.infoware:mti:8.4.3"
     
   }
 
 ## MtiHelper Class
-Die MTI-Funktionen arbeiten asynchron. Bei Funktionsaufruf wird sofort ein Rückgabewert geliefert, bei dem es sich in der Regel um eine sogenannte Request-ID handelt.
-Die eigentlich Bearbeitung erfolgt anschließend im Hintergrund. 
-Nach Abschluss der Bearbeitung wird die mit der Funktion assoziierte Callback-Method aufgerufen, die von der App überschrieben werden muss.
-Die Signatur der Callback-Methoden beinhaltet diverse und je nach Method abweichende Parameter, aber immer die ursprüngliche Request-ID, die dann dem Aufruf zugeordnet werden kann.
+The MTI functions work asynchronously. When the function is called, a return value is returned immediately, which is usually a request ID.
+The actual processing then takes place in the background. 
+Once processing is complete, the callback method associated with the function is called, which must be overwritten by the app.
+The signature of the callback methods contains various parameters that vary depending on the method, but always the original request ID, which can then be assigned to the call.
 
-Die Klasse MtiHelper implementiert die Callback-Methoden und kapselt die Aufrufe der MTI-Methoden.
+The class MtiHelper implements the callback methods and encapsulates the calls of the MTI methods.
 
-Zusätzlich regelt die Klasse MtiHelper Teile der Anwendungslogik, was im Sinne eines guten Designs sicher besser in einer dedizierten Klasse aufgehoben wäre.
+In addition, the class MtiHelper controls parts of the application logic, which in terms of good design would certainly be better handled in a dedicated class.
 
 ## MtiCallbackSynchronizer Class
-Wie bereits erwähnt, arbeitet MTI asynchron.
-Das heißt, dass die Callback-Methoden-Aufrufe nicht zwangsläufig in der selben Reihenfolge erfolgen, wie die MTI-Methoden aufgerufen wurden.
-Je nach Methode und Anwendungslogik kann es aber notwendig sein, dass die aufrufende Methode die eigene Bearbeitung erst dann fortsetzt, wenn der entsprechende Callback eintritt.
+As already mentioned, MTI works asynchronously.
+This means that the callback method calls do not necessarily occur in the same order in which the MTI methods were called.
+However, depending on the method and application logic, it may be necessary for the calling method to continue its own processing only when the corresponding callback occurs.
 
-Diesem Zweck dient die Klasse MtiCallbackSynchronizer, die das 'Warten' auf den Callback ermöglicht, wahlweise mit Timeouts.
-Diese Klasse ist eine Beispiel-Implementierung, die im Zuge des Beispiel-App-Projekts entstanden ist. Sicherlich gibt es weitere Möglichkeiten, asynchrone Prozesse zu orchestrieren.
+The class MtiCallbackSynchronizer is used for this purpose. It allows you to 'wait' for the callback, optionally with timeouts.
+This class is an example implementation that was created in the course of the example app project. Certainly there are further possibilities to orchestrate asynchronous processes.
 
-## Sonstige Klassen
-Die übrigen Klassen des Projekts implementieren die Repräsentationsschicht, Dateihandling, Logging, Konfiguration etc.
-Da die Beispiel-App die Funktionsweise und Möglichkeiten von MTI hervorheben soll, wird auf diese Klassen nicht weiter eingegangen.
+## Other classes
+The remaining classes of the project implement the representation layer, file handling, logging, configuration, etc.
+As the example app is intended to highlight the functionality and capabilities of MTI, these classes will not be discussed further.
