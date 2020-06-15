@@ -15,5 +15,3 @@ More details about the application itself are in the file DESCRIPTION.md.
 
 ## Integration MTI
 The integration of the MapTrip interface into the app is explained in the document HOW_TO_APP.
-
-Translated with www.DeepL.com/Translator (free version)
