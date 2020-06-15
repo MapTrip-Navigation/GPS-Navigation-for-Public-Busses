@@ -14,4 +14,4 @@ Die Entwicklung erfolgte im Android Studio von JetBrains.
 Weitere Details über die Anwendung selbst stehen in der Datei BESCHREIBUNG.md.
 
 ## Integration MTI
-Das Einbinden des MapTrip Interface in die App wird im Dokument LEITFADEN erläutert.
+Das Einbinden des MapTrip Interface in die App wird im Dokument HOW_TO.md erläutert.
