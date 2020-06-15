@@ -11,7 +11,7 @@ Zur Aufzeichnung der Referenzrouten stellt die Firma infoware GmbH diverse Werkz
 Die Entwicklung erfolgte im Android Studio von JetBrains.
 
 ## Beschreibung der Anwendung
-Weitere Details über die Anwendung selbst stehen in der Datei DESCRIPTION.md.
+Weitere Details über die Anwendung selbst stehen in der Datei BESCHREIBUNG.md.
 
 ## Integration MTI
-Das Einbinden des MapTrip Interface in die App wird im Dokument HOW_TO_APP erläutert.
+Das Einbinden des MapTrip Interface in die App wird im Dokument LEITFADEN erläutert.
