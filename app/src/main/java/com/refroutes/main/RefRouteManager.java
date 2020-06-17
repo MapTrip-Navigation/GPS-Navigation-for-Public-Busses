@@ -94,8 +94,9 @@ public class RefRouteManager {
             mtiCalls.removeAllDestinationCoordinates(new Long(10000));
         }
 
-        ApiError waitForStartResult = mtiCalls.startReferenceRoute(refRoutes.get(routeId).getRefRouteFileName(), !restartTour, null);
-        logger.finest("routeItem", "refRouteFileName = " + refRoutes.get(routeId).getRefRouteFileName());
+        String refRouteFileName = routesPath + "/" + refRoutes.get(routeId).getRefRouteFileName();
+        ApiError waitForStartResult = mtiCalls.startReferenceRoute(refRouteFileName, !restartTour, null);
+        logger.finest("routeItem", "refRouteFileName = " + refRouteFileName);
         if (waitForStartResult == ApiError.OK) {
             ApiError waitForCallBack = mtiCalls.waitForDestinationReached();
             switch (waitForCallBack) {
