@@ -26,15 +26,16 @@ Dazu wird die MTI Lib-Datei __mti.aar__ im Ordner app/libs abgelegt und als Depe
     
   }
 
-## MtiHelper Class
+## MtiCalls Class
 Die MTI-Funktionen arbeiten asynchron. Bei Funktionsaufruf wird sofort ein Rückgabewert geliefert, bei dem es sich in der Regel um eine sogenannte Request-ID handelt.
 Die eigentlich Bearbeitung erfolgt anschließend im Hintergrund. 
 Nach Abschluss der Bearbeitung wird die mit der Funktion assoziierte Callback-Method aufgerufen, die von der App überschrieben werden muss.
 Die Signatur der Callback-Methoden beinhaltet diverse und je nach Method abweichende Parameter, aber immer die ursprüngliche Request-ID, die dann dem Aufruf zugeordnet werden kann.
 
-Die Klasse MtiHelper implementiert die Callback-Methoden und kapselt die Aufrufe der MTI-Methoden.
+Die Klasse MtiCalls implementiert die Callback-Methoden und kapselt die Aufrufe der MTI-Methoden.
 
-Zusätzlich regelt die Klasse MtiHelper Teile der Anwendungslogik, was im Sinne eines guten Designs sicher besser in einer dedizierten Klasse aufgehoben wäre.
+## RefRouteManager Class
+Der RefRouteManager regelt das Verhalten der Anwendung in Bezug auf die nächste zu fahrende Route, die aktuelle Route und welche Routen noch zu fahren sind. Darüber hinaus entkoppelt er die GUI vollständig vom MTI.
 
 ## MtiCallbackSynchronizer Class
 Wie bereits erwähnt, arbeitet MTI asynchron.
