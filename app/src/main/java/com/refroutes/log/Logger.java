@@ -168,9 +168,8 @@ public class Logger {
                 source = "";
             }
             String strDate = (formatter.format(date) + placeHolder).substring(0, 30);
-            String levelFormatted = (level.getName() + placeHolder).substring(0,10);
-     //       levelFormatted = levelFormatted.substring(0, 10);
-            String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,40);
+            String levelFormatted = (level.getName() + placeHolder).substring(0,15);
+            String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,40) + "    ";
 
             message = String.format("%s%s%s%s%s", strDate, levelFormatted, identifierFormatted, message, System.lineSeparator());
             writeToFile(message);
