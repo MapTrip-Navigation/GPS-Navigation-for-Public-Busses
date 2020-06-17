@@ -289,12 +289,11 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void reactToMessageButton() {
-//        if (refRouteManager.isMessageButtonClicked()) {
-//            if (isRoutingActive) {
-//                buttonPauseClicked();
-//            }
-//        }
-//        refRouteManager.resetMessageButtonClick();
+        // showMessageButton is part of MTI
+        // MTI must be initialized before using the MessageButton
+        if (!mtiInitialized) {
+            return;
+        }
         refRouteManager.showMessageButton();
 
     }
