@@ -34,7 +34,8 @@ The signature of the callback methods contains various parameters that vary depe
 
 The class MtiHelper implements the callback methods and encapsulates the calls of the MTI methods.
 
-In addition, the class MtiHelper controls parts of the application logic, which in terms of good design would certainly be better handled in a dedicated class.
+## RefRouteManager Class
+The RefRouteManager controls the behaviour of the application with regard to the next route to be driven, the current route and which routes are still to be driven. Furthermore, it completely decouples the GUI from the MTI.
 
 ## MtiCallbackSynchronizer Class
 As already mentioned, MTI works asynchronously.
