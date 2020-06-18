@@ -36,26 +36,44 @@ public class MtiCalls implements ApiListener, NavigationListener {
     }
 
     // ======================================================================================================
-    // MTI Provided Methods
+    //      MTI provided methods
+    //      Most of the next methods use a semaphore to wait until MTI calls the callback methods
     // ======================================================================================================
+
+    /**
+     * Initializes the MTI interface.
+     * Waits until MTI is available. Means that this can block the whole App.
+     * @return The ApiError as received by MTI
+     */
+    public ApiError initMti(Context context) {
+        if (!isMtiInitialized) {
+            MTIHelper.initialize(context);
+            isMtiInitialized = true;
+        }
+        Api.init();
+        Api.registerListener(this);
+        Navigation.registerListener(this);
+        ApiError result = MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_INIT, "Api.init").waitForCallback(null);
+        Api.customFunction("packageName", "com.refroutes");
+        Api.customFunction("className", "com.refroutes.main.MainActivity");
+
+        return result;
+    }
 
     public ApiError findServer() {
         logger.finest("findServer", "findServer()");
         int findServerId = Api.findServer();
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(findServerId, "Api.findServer");
-        return semaphore.waitForCallback(null);
+        return MtiCallbackSynchronizer.getSemaphoreForCallBack(findServerId, "Api.findServer").waitForCallback(null);
     }
 
     public ApiError startReferenceRoute(String refRouteFileName, boolean restartTour, Long waitTime) {
         int startReferenceRouteId = Navigation.startReferenceRoute(refRouteFileName, restartTour);
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(startReferenceRouteId, "Navigation.startReferenceRoute");
-        return semaphore.waitForCallback(waitTime);
+        return  MtiCallbackSynchronizer.getSemaphoreForCallBack(startReferenceRouteId, "Navigation.startReferenceRoute").waitForCallback(waitTime);
     }
 
     public ApiError getCurrentDestination(Long waitTime) {
         int getCurrentDestinationId = Navigation.getCurrentDestination();
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(getCurrentDestinationId, "Navigation.getCurrentDestination");
-        return semaphore.waitForCallback(waitTime);
+        return MtiCallbackSynchronizer.getSemaphoreForCallBack(getCurrentDestinationId, "Navigation.getCurrentDestination").waitForCallback(waitTime);
     }
 
     public ApiError stopNavigation(Long waitTime){
@@ -87,49 +105,19 @@ public class MtiCalls implements ApiListener, NavigationListener {
         removeAllDestinationCoordinates(null);
     }
 
-    /**
-     * Initializes the MTI interface.
-     * Waits until MTI is available. Means that this can block the whole App.
-     * @return The ApiError as received by MTI
-     */
-    public ApiError initMti(Context context) {
-        if (!isMtiInitialized) {
-            MTIHelper.initialize(context);
-            isMtiInitialized = true;
-        }
-        Api.init();
-        Api.registerListener(this);
-        Navigation.registerListener(this);
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_INIT, "Api.init");
-
-        ApiError result =  semaphore.waitForCallback(null);
-        Api.customFunction("packageName", "com.refroutes");
-        Api.customFunction("className", "com.refroutes.main.MainActivity");
-
-        return result;
-    }
-
     private void uninitMti() {
         Api.uninit();
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_UNINIT, "Api.uninit");
-        semaphore.waitForCallback(new Long(5000));
+        MtiCallbackSynchronizer.getSemaphoreForCallBack(CALLBACK_UNINIT, "Api.uninit").waitForCallback(new Long(5000));
     }
 
     public ApiError hideServer (Long waitTime) {
         int hideServerRequestId = Api.hideServer();
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.hideServer");
-        return semaphore.waitForCallback(waitTime);
+        return MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.hideServer").waitForCallback(waitTime);
     }
 
     public ApiError showApp (String packageName, String className, Long waitTime) {
         int hideServerRequestId = Api.showApp(packageName, className);
-        MtiCallbackSynchronizer.Semaphore semaphore = MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.showApp");
-        return semaphore.waitForCallback();
-    }
-
-    private void callBackCalled(int callBackOrRoute, String info, ApiError apiError, String logInfo) {
-        // apiError sometimes is null - then the result is ok
-        MtiCallbackSynchronizer.callBackCalled(callBackOrRoute, info, apiError != null ? apiError : ApiError.OK, logInfo);
+        return MtiCallbackSynchronizer.getSemaphoreForCallBack(hideServerRequestId, "Api.showApp").waitForCallback();
     }
 
     public void showMessageButton () {
@@ -142,22 +130,22 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void onError(int i, String s, ApiError apiError) {
-        callBackCalled(CALLBACK_ON_ERROR, s, apiError, "onError");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_ON_ERROR, s, apiError, "onError");
     }
 
     @Override
     public void findServerResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "findServerResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "findServerResult");
     }
 
     @Override
     public void initResult(int i, ApiError apiError) {
-        callBackCalled(CALLBACK_INIT, null, apiError, "initResult");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_INIT, null, apiError, "initResult");
     }
 
     @Override
     public void showAppResult(int i, ApiError apiError) {
-        callBackCalled(CALLBACK_SHOW_APP, null, apiError, "showAppResult");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_SHOW_APP, null, apiError, "showAppResult");
     }
 
     @Override
@@ -181,12 +169,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void showServerResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "showServerResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "showServerResult");
     }
 
     @Override
     public void hideServerResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "hideServerResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "hideServerResult");
     }
 
     @Override
@@ -226,18 +214,17 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void customFunctionResult(int i, String s, String s1, ApiError apiError) {
-        callBackCalled(CALLBACK_CUSTOM_FUNCTION, "i = " + i + "s = " + s + "s1 = " + s1, null, "customFunctionResult");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_CUSTOM_FUNCTION, "i = " + i + "s = " + s + "s1 = " + s1, null, "customFunctionResult");
     }
 
     @Override
     public void infoMsg(Info info, int i) {
         refRouteManager.setMessageButtonClicked(true);
-//        callBackCalled(CALLBACK_INFO, "info: " + info + "; i = " + i, null, "infoMsg");
     }
 
     @Override
     public void statusInfo(double v, double v1, double v2, double v3) {
-        callBackCalled(CALLBACK_STATUS_INFO, "v = " + v + "; v1 = " + v1 + "; v2 = " + v2 + "; v3 = " + v3, ApiError.OK, "statusInfo");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_STATUS_INFO, "v = " + v + "; v1 = " + v1 + "; v2 = " + v2 + "; v3 = " + v3, ApiError.OK, "statusInfo");
     }
 
     @Override
@@ -252,7 +239,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void destinationReached(int routeId) {
-        callBackCalled(CALLBACK_DESTINATION_REACHED, null, ApiError.OK, "destinationReached");
+        MtiCallbackSynchronizer.callBackCalled(CALLBACK_DESTINATION_REACHED, null, ApiError.OK, "destinationReached");
     }
 
     @Override
@@ -302,12 +289,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void getCurrentDestinationResult(int requestId, ApiError apiError, int i1) {
-        callBackCalled(requestId, null, apiError, "getCurrentDestinationResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "getCurrentDestinationResult");
     }
 
     @Override
     public void removeAllDestinationCoordinatesResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "removeAllDestinationCoordinatesResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "removeAllDestinationCoordinatesResult");
     }
 
     @Override
@@ -327,22 +314,22 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void stopNavigationResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "stopNavigationResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "stopNavigationResult");
     }
 
     @Override
     public void startRouteFromFileResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "startRouteFromFileResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "startRouteFromFileResult");
     }
 
     @Override
     public void startReferenceRouteResult(int requestId, ApiError apiError) {
-        callBackCalled(requestId, null, apiError, "startReferenceRouteResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "startReferenceRouteResult");
     }
 
     @Override
     public void getReferenceRouteFileResult(int requestId, String s, ApiError apiError) {
-        callBackCalled(requestId, s, apiError, "getReferenceRouteFileResult");
+        MtiCallbackSynchronizer.callBackCalled(requestId, s, apiError, "getReferenceRouteFileResult");
     }
 
     @Override

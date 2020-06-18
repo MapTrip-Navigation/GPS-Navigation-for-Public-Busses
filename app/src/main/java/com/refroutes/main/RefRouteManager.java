@@ -38,21 +38,21 @@ public class RefRouteManager {
         isWorking = false;
     }
 
+    // =========================================================
+    //      Routing status
+    // =========================================================
+
     public boolean isWorking() {
         return isWorking;
-    }
-
-    public boolean isMessageButtonClicked() {
-        return messageButtonClicked;
-    }
-
-    public void resetMessageButtonClick() {
-        messageButtonClicked = false;
     }
 
     public void resetWorkingSwitch() {
         isWorking = true;
     }
+
+    // =========================================================
+    //      Route handling
+    // =========================================================
 
     public int getLastRefRouteId() {
         return lastRefRouteId;
@@ -84,8 +84,14 @@ public class RefRouteManager {
         return activeRefRouteId;
     }
 
+
+
+    // =========================================================
+    //      Routing
+    // =========================================================
+
     /**
-     * Start routing
+     * Start routing a reference route
      */
     @WorkerThread
     public ApiError routeItem(String packageName, String className, String routesPath, Integer routeId, boolean restartTour) {
@@ -114,6 +120,11 @@ public class RefRouteManager {
         mtiCalls.showApp(packageName, className, null);
         return waitForStartResult;
     }
+
+    // =========================================================
+    //      Mti layer
+    // =========================================================
+
 
     public ApiError initMti(Context context) {
         return mtiCalls.initMti(context);

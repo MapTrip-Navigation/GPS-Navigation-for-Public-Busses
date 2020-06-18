@@ -15,32 +15,6 @@ import java.util.logging.Level;
 
 @WorkerThread
 public class Logger {
-
-    private String identifier;
-    private long maxFileSize = 1000000;
-    private static Properties properties;
-    private static String parentPath;
-    private static boolean reStarted = true;
-    private static String logFileName;
-    private static Level logLevel;
-    private static long fileSize = 0;
-
-    private static String placeHolder = "                                                  ";
-
-
-    private Logger(String identifier) {
-        this.identifier = identifier;
-
-        if (reStarted) {
-            String logFileName = parentPath + "/" + getProperty("loggingFileName", "log/logging.log");
-            Level logLevel = Level.parse(getProperty("logLevel", "FINE"));
-            this.logFileName = logFileName;
-            this.logLevel = logLevel;
-
-            checkPath();
-        }
-    }
-
     /**
      *  Simple Logger.
      *  Of course there are standard solutions; this logger was created to learn a little bit more about development under android.
@@ -60,14 +34,47 @@ public class Logger {
      *    loggingFileName - relative to app path, without leading slash
      *    logLevel        - like defined in java.util.logging
      *    maxFileSize     - max size until rotating to next file, size is only a reference value and not guaranteed exactly
+     *
      */
 
+    private String identifier;
+    private long maxFileSize = 1000000;
+    private static Properties properties;
+    private static String parentPath;
+    private static boolean reStarted = true;
+    private static String logFileName;
+    private static Level logLevel;
+    private static long fileSize = 0;
+
+    private static String placeHolder = "                                                  ";
+
+    /**
+     * Returns a new Logger
+     * @param identifier Any string to distinguish between the different classes of the project using the logger.
+     *                   This can be the name of a class or whatever.
+     */
     public static Logger createLogger(String identifier) throws InternalError{
         if (parentPath == null) {
             throw new InternalError("propertyFilePath not yet initialized. At first call static method setPropertyFilePath()");
         }
         Logger logger = new Logger (identifier);
         return logger;
+    }
+
+    /**
+     * Used to set the basic path of logging. If a property file has to be used it is expected in this path.
+     * @param parentPath Absolute path of logging.
+     */
+    public static void setBasePath(String parentPath) {
+        Logger.parentPath = parentPath;
+        properties = new Properties();
+
+        try {
+            InputStream stream = new FileInputStream(parentPath + "/logging.properties");
+            properties.load(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -145,6 +152,19 @@ public class Logger {
         log(source, message, Level.SEVERE);
     }
 
+    private Logger(String identifier) {
+        this.identifier = identifier;
+
+        if (reStarted) {
+            String logFileName = parentPath + "/" + getProperty("loggingFileName", "log/logging.log");
+            Level logLevel = Level.parse(getProperty("logLevel", "FINE"));
+            this.logFileName = logFileName;
+            this.logLevel = logLevel;
+
+            checkPath();
+        }
+    }
+
     /*
      * Create the log entry
      * @param message The log message
@@ -179,18 +199,6 @@ public class Logger {
         return properties.getProperty(key, defaultValue);
     }
 
-    public static void setBasePath(String parentPath) {
-        Logger.parentPath = parentPath;
-        properties = new Properties();
-
-        try {
-            InputStream stream = new FileInputStream(parentPath + "/logging.properties");
-            properties.load(stream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void checkPath() {
         File file = new File (logFileName);
         File parentFile = file.getParentFile();
@@ -202,6 +210,7 @@ public class Logger {
     private void addBytesToLogFileSize(long bytes) {
         fileSize+=bytes;
     }
+
     private long getLogFileSize () {
         // at first init get file size by file
         if (reStarted) {
