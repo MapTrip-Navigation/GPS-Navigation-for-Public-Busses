@@ -70,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
      * React to GO Button click
      */
     public void startOrStopRouting(View view) {
+        logger.finest("startOrStopRouting", "Main control button was clicked");
+
         if (isRoutingActive && !isPaused) {
             // Make a PAUSE
             buttonPauseClicked();
@@ -233,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     // ======================================================================================================
 
     private void resetRouting() {
+        logger.finest("resetRouting", "Activate GO Button");
         Button button = findViewById(R.id.buttonGo);
         button.setText("GO");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_IN_WORK));
@@ -241,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void pauseOnAutoPilotOff() {
+        logger.finest("pauseOnAutoPilotOff", "React to user action");
         Button button = findViewById(R.id.buttonGo);
         button.setText("FORTSETZEN");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
@@ -249,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void buttonPauseClicked() {
-        logger.finest("buttonPauseClicked", "");
+        logger.finest("buttonPauseClicked", "React to user action");
 
         // if 'resume' was clicked and MapTrip not was yet on top
         // the button may not be clicked once again
@@ -473,9 +477,12 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
      *
      * @param apiError If ApiError.OK MTI is initialized and the user can use routes. Otherwise the GO Button keeps disabled.
      */
-    private void mtiInitFinished(ApiError apiError, boolean mapTripStartRequested) {
+    private void mtiInitFinished(ApiError apiError) {
         switch (apiError) {
             case OK:
+                // Bring App to front
+                hideMapTrip(refRouteManager);
+
                 // Show user that he can start
                 activateGoButton(refRoutes.size() > 0);
                 mtiInitialized = true;
@@ -483,7 +490,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
             default:
                 String apiErrorName = apiError.name();
-                logger.warn("waitForMtiInit", "waitForMtiInit Fehler bei Initialisierung: " + apiErrorName);
+                logger.warn("waitForMtiInit", "waitForMtiInit Error in initialisation: " + apiErrorName);
                 Toast.makeText(this, "Fehler bei Initialisierung: " + apiErrorName, Toast.LENGTH_LONG);
                 try {
                     Thread.sleep(500);
@@ -502,22 +509,24 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         startActivity(intent);
     }
 
-    private void startMapTrip() {
+    private boolean startMapTrip() {
         logger.info("startMapTrip", "Launching MapTrip as: " + mapTripAppSystemName);
         Intent intent = getPackageManager().getLaunchIntentForPackage(mapTripAppSystemName);
         if (null == intent) {
-            logger.warn("startMapTrip", "Intent ist NULL: getPackageManager().getLaunchIntentForPackage(mapTripAppSystemName) fehl geschlagen.");
+            logger.warn("startMapTrip", "Intent is NULL: getPackageManager().getLaunchIntentForPackage(mapTripAppSystemName) failed.");
         }
 
         try {
             startActivity(intent);
+            return true;
         } catch (ActivityNotFoundException eToo) {
-            logger.severe("startMapTrip", "MapTrip konnte nicht gestartet werden. SystemName =  " + mapTripAppSystemName + ";" + eToo.getMessage());
+            logger.severe("startMapTrip", "MapTrip could not be started. SystemName =  " + mapTripAppSystemName + ";" + eToo.getMessage());
             Toast.makeText(this, "Maptrip konnte nicht gestartet werden", Toast.LENGTH_LONG);
         } catch (Exception ex) {
-            logger.severe("startMapTrip", "MapTrip konnte nicht gestartet werden. SystemName =  " + mapTripAppSystemName + ";" + ex.getMessage());
+            logger.severe("startMapTrip", "MapTrip could not be started. SystemName =  " + mapTripAppSystemName + ";" + ex.getMessage());
             Toast.makeText(this, "Maptrip konnte nicht gestartet werden", Toast.LENGTH_LONG);
         }
+        return false;
     }
 
     // ======================================================================================================
@@ -646,11 +655,13 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
 
-    private ApiError checkMapTripRunning() {
+    private ApiError checkMapTripRunning(boolean startApp) {
         ApiError findServerResult = refRouteManager.findServer();
         if (ApiError.COULD_NOT_FIND_SERVER == findServerResult || ApiError.TIMEOUT == findServerResult) {
             logger.info("initMti", "MapTrip not running, starting App");
-            startMapTrip();
+            if (startApp) {
+                startMapTrip();
+            }
         }
         return findServerResult;
     }
@@ -665,7 +676,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         if (mtiInitialized) {
             return;
         }
-
         mtiThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -673,18 +683,26 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
                 int retries = 0;
                 ApiError initMtiResult = ApiError.NOT_STARTED;
+                boolean innerStartApp = startMapTripRequested;
+                initMtiResult = refRouteManager.initMti(activity);
                 while (retries++ < 10 && ApiError.OK != initMtiResult) {
-                    initMtiResult = refRouteManager.initMti(activity);
                     if (startMapTripRequested) {
-                        initMtiResult = checkMapTripRunning();
+                        initMtiResult = checkMapTripRunning(innerStartApp);
                     }
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    innerStartApp = false;
+                    initMtiResult = refRouteManager.initMti(activity);
                 }
 
                 final ApiError apiErrorInRunnable = initMtiResult;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        activity.mtiInitFinished(apiErrorInRunnable, startMapTripRequested);
+                        activity.mtiInitFinished(apiErrorInRunnable);
                     }
                 });
 
