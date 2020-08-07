@@ -473,7 +473,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
     /**
      * Reacts to MTI Initialization.
-     * AND tries to initialize MTI again as long as MTI doesn't work
      *
      * @param apiError If ApiError.OK MTI is initialized and the user can use routes. Otherwise the GO Button keeps disabled.
      */
