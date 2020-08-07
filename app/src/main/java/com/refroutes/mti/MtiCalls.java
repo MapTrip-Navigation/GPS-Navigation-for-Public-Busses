@@ -219,6 +219,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void infoMsg(Info info, int i) {
+        logger.finest("infoMsg", "Callback: infoFromSDK: " + info);
         refRouteManager.setMessageButtonClicked(true);
     }
 
@@ -229,12 +230,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void coiInfo(double v, double v1, String s, String s1, double v2) {
-
+        logger.finest("coiInfo", "Callback: infoFromSDK: Position" + v + ";" + v1 + "; " + s + ";" + s1 + "; " + v2);
     }
 
     @Override
     public void crossingInfo(double v, double v1, String s, String s1, String s2, double v2) {
-
+        logger.finest("crossingInfo", "Callback: infoFromSDK: Position" + v + ";" + v1 + "; " + s + ";" + s1 + "; " + v2);
     }
 
     @Override
@@ -279,7 +280,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void getDestinationCoordinateResult(int i, ApiError apiError, double v, double v1) {
-
+        logger.finest("getDestinationCoordinateResult", "Callback: getDestinationCoordinateResult: " + v + ";" + v1 + "; apiError = " + apiError);
     }
 
     @Override
@@ -299,7 +300,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void startNavigationResult(int i, ApiError apiError) {
-
+        logger.finest("startNavigationResult", "Callback: startNavigationResult: apiError = " + apiError);
     }
 
     @Override
@@ -344,12 +345,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void routingStarted() {
-
+        logger.finest("routingStarted", "Callback: routingStarted");
     }
 
     @Override
     public void routeCalculated() {
-
+        logger.finest("routeCalculated", "Callback: routeCalculated");
     }
 
     @Override
