@@ -55,13 +55,25 @@ public class MtiCallbackSynchronizer {
     }
 
     /**
+     * Returns an ApiError after waiting for a callback
+     * @param callBackId The ID to identify the relation between the MTI call and the callback of MTI.
+     *                   This ID is used to wait for the callback.
+     * @param semaphoreInfo String which can be used to identify the semaphore.
+     * @param timeOut Max waiting time in millis. If null there is no timeout.
+     * @return ApiError
+     */
+    public static ApiError wait(int callBackId, String semaphoreInfo, Long timeOut) {
+        return getSemaphoreForCallBack(callBackId, semaphoreInfo).waitForCallback(timeOut);
+    }
+
+    /*
      * Returns a semaphore which can be used for waiting to callbacks
      * @param callBackId The ID to identify the relation between the MTI call and the callback of MTI.
      *                   This ID is used to wait for the callback.
      * @param semaphoreInfo String which can be used to identify the semaphore.
      * @return A semaphore which can be used to wait until a callback comes
      */
-    public static Semaphore getSemaphoreForCallBack(int callBackId, String semaphoreInfo) {
+    private static Semaphore getSemaphoreForCallBack(int callBackId, String semaphoreInfo) {
         logger.finest("getSemaphoreForCallBack", "callBackId = " + callBackId + ", info = " + semaphoreInfo + ")");
         Semaphore sem = retrieveSemaphore(callBackId);
         if (null != sem && sem.isWaiting()) {

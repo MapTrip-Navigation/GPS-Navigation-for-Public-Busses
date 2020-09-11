@@ -172,27 +172,29 @@ public class Logger {
      * @param level Log level (java.util.logging.Level)
      */
     private void log(String source, String message, Level level) {
-            // Filter log level
-            if (logLevel.intValue() > level.intValue()) {
-                return;
-            }
+        // Filter log level
+        if (logLevel.intValue() > level.intValue()) {
+            return;
+        }
 
-            replaceLogFile();
+        replaceLogFile();
 
-            Date date = new Date();
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
 
-            String space50 = new String(new char[50]).replaceAll("", " ");
+        String space50 = new String(new char[50]).replaceAll("", " ");
 
-            if (null == source) {
-                source = "";
-            }
-            String strDate = (formatter.format(date) + placeHolder).substring(0, 30);
-            String levelFormatted = (level.getName() + placeHolder).substring(0,15);
-            String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,40) + "    ";
+        if (null == source) {
+            source = "";
+        }
+        String strDate = (formatter.format(date) + placeHolder).substring(0, 26);
+        String levelFormatted = (level.getName() + placeHolder).substring(0,11) + "  ";
+        String identifierFormatted = (identifier + placeHolder).substring(0,30) + "  ";
+        String sourceFormatted = (source + placeHolder).substring(0,30);
+//            String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,50) + "    ";
 
-            message = String.format("%s%s%s%s%s", strDate, levelFormatted, identifierFormatted, message, System.lineSeparator());
-            writeToFile(message);
+        message = String.format("%s%s%s%s%s%s", strDate, levelFormatted, identifierFormatted, sourceFormatted, message, System.lineSeparator());
+        writeToFile(message);
     }
 
     private String getProperty(String key, String defaultValue) {
