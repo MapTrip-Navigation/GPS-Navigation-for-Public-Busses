@@ -9,8 +9,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 
 @WorkerThread
@@ -45,6 +50,9 @@ public class Logger {
     private static String logFileName;
     private static Level logLevel;
     private static long fileSize = 0;
+    private static ConcurrentLinkedQueue<String> logEntries;
+    private static boolean cacheBlocked = false;
+    private static Thread cacheRunner;
 
     private static String placeHolder = "                                                  ";
 
@@ -57,6 +65,9 @@ public class Logger {
         if (parentPath == null) {
             throw new InternalError("propertyFilePath not yet initialized. At first call static method setPropertyFilePath()");
         }
+
+        startCacheWriter();
+
         Logger logger = new Logger (identifier);
         return logger;
     }
@@ -75,18 +86,6 @@ public class Logger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Write log entry with blocking threads and app
-     * Dedicated to special situations e.g. if App onStop() is called and to ensure that the logger has enough time for writing
-     * Attention: usage of this function should be an exception.
-     * @param message The log message
-     * @param source Method or other info about source
-     * @param level Log level (java.util.logging.Level)
-     */
-    public synchronized void logWithBlocking(String source, String message, Level level) {
-        log (source, message, level);
     }
 
     /**
@@ -187,14 +186,13 @@ public class Logger {
         if (null == source) {
             source = "";
         }
-        String strDate = (formatter.format(date) + placeHolder).substring(0, 26);
-        String levelFormatted = (level.getName() + placeHolder).substring(0,11) + "  ";
-        String identifierFormatted = (identifier + placeHolder).substring(0,30) + "  ";
-        String sourceFormatted = (source + placeHolder).substring(0,30);
-//            String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,50) + "    ";
+        String strDate = (formatter.format(date) + placeHolder).substring(0, 30);
+        String levelFormatted = (level.getName() + placeHolder).substring(0,15);
+        String identifierFormatted = (identifier + ": " + source + placeHolder).substring(0,40) + "    ";
 
-        message = String.format("%s%s%s%s%s%s", strDate, levelFormatted, identifierFormatted, sourceFormatted, message, System.lineSeparator());
-        writeToFile(message);
+        message = String.format("%s%s%s%s%s", strDate, levelFormatted, identifierFormatted, message, System.lineSeparator());
+
+        logToCache(message);
     }
 
     private String getProperty(String key, String defaultValue) {
@@ -209,7 +207,7 @@ public class Logger {
         }
     }
 
-    private void addBytesToLogFileSize(long bytes) {
+    private static void addBytesToLogFileSize(long bytes) {
         fileSize+=bytes;
     }
 
@@ -253,7 +251,7 @@ public class Logger {
     }
 
     @WorkerThread
-    private void writeToFile(String message) {
+    private static void writeToFile(String message) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(logFileName, true);
             fileOutputStream.write((message).getBytes());
@@ -265,4 +263,68 @@ public class Logger {
         }
         addBytesToLogFileSize(message.getBytes().length);
     }
+
+    private static void logToCache(String message) {
+        while (cacheBlocked) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        logEntries.add(message);
+    }
+
+    private static void startCacheWriter() {
+        if (null == cacheRunner) {
+//            logEntries = Collections.synchronizedHashMap(new ArrayList<String>());
+            logEntries = new ConcurrentLinkedQueue<String>();
+            cacheRunner = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+//                        cacheBlocked = true;
+                        if (!logEntries.isEmpty()) {
+                            String logEntry = logEntries.poll();
+                            writeToFile(logEntry);
+                        }
+//                        cacheBlocked = false;
+
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            cacheRunner.start();
+        }
+    }
+
+    private static class LogObject {
+        private String message;
+        private String source;
+        private Level level;
+
+        public LogObject (String source, String message, Level level) {
+            this.source = source;
+            this.message = message;
+            this.level = level;
+        }
+
+        public Level getLevel() {
+            return this.level;
+        }
+
+        public String getMessage() {
+            return this.message;
+        }
+
+        public String getSource () {
+            return this.source;
+        }
+    }
+
+
 }
