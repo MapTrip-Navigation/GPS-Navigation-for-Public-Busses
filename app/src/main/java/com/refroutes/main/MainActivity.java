@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     @Override
     public void onDestroy() {
         super.onDestroy();
-        logger.logWithBlocking("onDestroy", "Anwendung wird beendet.", Level.INFO);
+        logger.info("onDestroy", "Anwendung wird beendet.");
     }
 
     @Override

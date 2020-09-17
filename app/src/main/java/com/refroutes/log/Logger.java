@@ -255,6 +255,7 @@ public class Logger {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(logFileName, true);
             fileOutputStream.write((message).getBytes());
+            fileOutputStream.flush();
             fileOutputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -291,7 +292,7 @@ public class Logger {
 //                        cacheBlocked = false;
 
                         try {
-                            Thread.sleep(50);
+                            Thread.sleep(10);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -325,6 +326,4 @@ public class Logger {
             return this.source;
         }
     }
-
-
 }

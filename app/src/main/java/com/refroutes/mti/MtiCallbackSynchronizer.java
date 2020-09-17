@@ -11,8 +11,9 @@ import de.infoware.android.mti.enums.ApiError;
 @WorkerThread
 public class MtiCallbackSynchronizer {
     private static HashMap<Integer, Semaphore> map = new HashMap<>();
-    private static MtiCallbackSynchronizer manager = new MtiCallbackSynchronizer();
-    private static Logger logger = Logger.createLogger("WaitForCallbackManager");
+    private static MtiCallbackSynchronizer synchronizer = new MtiCallbackSynchronizer();
+    private static Logger logger = Logger.createLogger("MtiCallbackSynchronizer");
+
 
     /**
      * This method should be called by the callback methods which are called themselve by MTI
@@ -35,7 +36,7 @@ public class MtiCallbackSynchronizer {
                 Semaphore sem = null;
                 int i = 0;
                 while (sem == null) {
-                    sem = manager.retrieveSemaphore(callBackOrRoute);
+                    sem = synchronizer.retrieveSemaphore(callBackOrRoute);
                     try {
                         Thread.sleep(200);
                         if (i++ > 2) {
@@ -60,7 +61,7 @@ public class MtiCallbackSynchronizer {
      *                   This ID is used to wait for the callback.
      * @param semaphoreInfo String which can be used to identify the semaphore.
      * @param timeOut Max waiting time in millis. If null there is no timeout.
-     * @return ApiError
+     * @return If successfull ApiError.OK otherwise another ApiError
      */
     public static ApiError wait(int callBackId, String semaphoreInfo, Long timeOut) {
         return getSemaphoreForCallBack(callBackId, semaphoreInfo).waitForCallback(timeOut);
@@ -77,8 +78,9 @@ public class MtiCallbackSynchronizer {
         logger.finest("getSemaphoreForCallBack", "callBackId = " + callBackId + ", info = " + semaphoreInfo + ")");
         Semaphore sem = retrieveSemaphore(callBackId);
         if (null != sem && sem.isWaiting()) {
-            // still there was a semaphore waiting to the same callBackId
+            // if still there was a semaphore waiting to the same callBackId
             // in this version this means that the last call was not successfull and we return a MESSAGE NOT SEND
+            logger.info("getSemaphoreForCallBack", "same callBackId was used before the callback returned: " + callBackId + ", info = " + semaphoreInfo + ")");
             Semaphore dummySem = addSemaphore(-1, semaphoreInfo, logger);
             dummySem.apiError = ApiError.MESSAGE_NOT_SEND;
             dummySem.interruptByError();
@@ -91,24 +93,24 @@ public class MtiCallbackSynchronizer {
         return addSemaphore(callBackId, semaphoreInfo, logger);
     }
 
-    public static void setUserInterrupt(int callBack) {
-        manager.interruptByUser(callBack);
+    private static void setUserInterrupt(int callBack) {
+        synchronizer.interruptByUser(callBack);
     }
 
-    public static Semaphore addSemaphore(int callBack, String info, Logger logger) {
-        return manager.createSemaphore(callBack, info, logger);
+    private static Semaphore addSemaphore(int callBack, String info, Logger logger) {
+        return synchronizer.createSemaphore(callBack, info, logger);
     }
 
-    public static void removeSemaphore(int callBack) {
-        manager.dropSemaphore(callBack);
+    private static void removeSemaphore(int callBack) {
+        synchronizer.dropSemaphore(callBack);
     }
 
     public static void setInterruptedByUser(int callBack) {
-        manager.setUserInterrupt(callBack);
+        synchronizer.setUserInterrupt(callBack);
     }
 
-    public static void setInterruptedByError(int callBack) {
-        manager.setErrorInterrupt(callBack);
+    private static void setInterruptedByError(int callBack) {
+        synchronizer.setErrorInterrupt(callBack);
     }
 
     private Semaphore createSemaphore(int callBack, String info, Logger logger) {
@@ -147,7 +149,7 @@ public class MtiCallbackSynchronizer {
     // ============================================================
     //      The class Semaphore is used for waiting to callbacks
     // ============================================================
-    public class Semaphore {
+    private class Semaphore {
         private int callBackOrRoute;
         private String semaphoreInfo;
         private ApiError apiError = ApiError.OK;

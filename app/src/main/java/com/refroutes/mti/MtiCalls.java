@@ -16,22 +16,22 @@ import de.infoware.android.mti.extension.MTIHelper;
 
 @WorkerThread
 public class MtiCalls implements ApiListener, NavigationListener {
-    public static int CALLBACK_ON_ERROR = 1;
-    public static int CALLBACK_INIT = 2;
-    public static int CALLBACK_UNINIT = 3;
-    public static int CALLBACK_SHOW_APP = 4;
-    public static int CALLBACK_DESTINATION_REACHED = 5;
-    public static int CALLBACK_STOP_NAVIGATION = 6;
-    public static int CALLBACK_STATUS_INFO = 7;
-    public static int CALLBACK_INFO = 8;
-    public static int CALLBACK_CUSTOM_FUNCTION = 10;
+    public static int CALLBACK_ON_ERROR = -1;
+    public static int CALLBACK_INIT = -2;
+    public static int CALLBACK_UNINIT = -3;
+    public static int CALLBACK_SHOW_APP = -4;
+    public static int CALLBACK_DESTINATION_REACHED = -5;
+    public static int CALLBACK_STOP_NAVIGATION = -6;
+    public static int CALLBACK_STATUS_INFO = -7;
+    public static int CALLBACK_INFO = -8;
+    public static int CALLBACK_CUSTOM_FUNCTION = -10;
 
+    private RefRouteManager refRouteManager;
     private static boolean isMtiInitialized = false;
     private Logger logger = Logger.createLogger("MtiCalls");
 
     // for demo purposes only
-    private static boolean demoMode = true;
-    private RefRouteManager refRouteManager;
+    private static boolean demoMode = false;
     private int processedRequestId = -1;
 
     public MtiCalls (RefRouteManager refRouteManager) {
@@ -104,6 +104,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
      */
     public ApiError startReferenceRouteDemo(String refRouteFileName) throws InterruptedException {
         // The callBackId can be used later as an association between the function call and the callback call
+        logger.info("startReferenceRouteDemo", "---> DEMO Step 1: Calling Navigation.startReferenceRoute");
         int callBackId = Navigation.startReferenceRoute(refRouteFileName, true);
 
         // From now the app has to wait until MapTrip started the ReferenceRotue
@@ -111,8 +112,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
         int loops = 0;
         while (processedRequestId != callBackId) {
             loops++;
-            logger.finest("startReferenceRouteDemo", "waiting for callback with ID " + callBackId + " - loops: " + loops);
+            Thread.sleep(20);
+            // Sequence step: 1
+            logger.info("startReferenceRouteDemo", "---> DEMO Step 2: Waiting for callback with ID (callback " + callBackId + ") - loops: " + loops);
         }
+        // Sequence step: 2
+        logger.info("startReferenceRouteDemo", "---> DEMO Step 3: process out of loop (callback " + callBackId + ")");
         return ApiError.OK;
     }
 
@@ -363,14 +368,24 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void startRouteFromFileResult(int requestId, ApiError apiError) {
+        logger.finest("startRouteFromFileResult", "requestId " + requestId);
         MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "startRouteFromFileResult");
     }
 
     @Override
     public void startReferenceRouteResult(int requestId, ApiError apiError) {
-        processedRequestId = requestId;
-        logger.finest("startReferenceRouteResult", "requestId " + requestId);
+        if (demoMode) {
+            // Sequence step: 3
+            logger.info("startReferenceRouteResult", "---> DEMO Step 4: Callback startReferenceRouteResult called (requestId " + requestId + ")");
+        }
+        else {
+            logger.finest("startReferenceRouteResult", "requestId " + requestId);
+        }
         MtiCallbackSynchronizer.callBackCalled(requestId, null, apiError, "startReferenceRouteResult");
+
+        if (demoMode) {
+            processedRequestId = requestId;
+        }
     }
 
     @Override
@@ -390,7 +405,12 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     @Override
     public void routingStarted() {
-        logger.finest("routingStarted", "Callback: routingStarted");
+        if (demoMode) {
+            logger.finest("routingStarted", "---> DEMO: Callback routingStarted called");
+        }
+        else {
+            logger.finest("routingStarted", "Callback: routingStarted");
+        }
     }
 
     @Override

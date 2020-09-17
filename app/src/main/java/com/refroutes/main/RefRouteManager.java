@@ -19,9 +19,10 @@ public class RefRouteManager {
     private ArrayList<RefRoute> refRoutes;
     private int startReferenceId = -1;
     private MtiCalls mtiCalls;
-
     private Logger logger = Logger.createLogger("RefRouteManager");
 
+    // for demo purposes only
+    boolean demo = false;
 
     public RefRouteManager(ArrayList<RefRoute> refRoutes) {
         this.mtiCalls = new MtiCalls(this);
@@ -102,8 +103,13 @@ public class RefRouteManager {
 
         String refRouteFileName = routesPath + "/" + refRoutes.get(routeId).getRefRouteFileName();
         ApiError waitForStartResult = mtiCalls.startReferenceRoute(refRouteFileName, !restartTour, null);
-        logger.finest("routeItem", "refRouteFileName = " + refRouteFileName);
+        logger.finest("routeItem", "refRouteFileName = " + refRouteFileName + "; restartTour: " + restartTour);
         if (waitForStartResult == ApiError.OK) {
+            if (demo) {
+                logger.info("routeItem", "---> DEMO Step 5: Show RefRoutes Menu");
+                mtiCalls.showApp(packageName, className, null);
+            }
+
             ApiError waitForCallBack = mtiCalls.waitForDestinationReached();
             switch (waitForCallBack) {
                 case OK:
@@ -122,9 +128,8 @@ public class RefRouteManager {
     }
 
     // =========================================================
-    //      Mti layer
+    //      MTI layer
     // =========================================================
-
 
     public ApiError initMti(Context context) {
         return mtiCalls.initMti(context);
