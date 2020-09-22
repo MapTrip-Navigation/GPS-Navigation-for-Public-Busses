@@ -181,8 +181,6 @@ public class Logger {
         Date date = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
 
-        String space50 = new String(new char[50]).replaceAll("", " ");
-
         if (null == source) {
             source = "";
         }
@@ -278,18 +276,15 @@ public class Logger {
 
     private static void startCacheWriter() {
         if (null == cacheRunner) {
-//            logEntries = Collections.synchronizedHashMap(new ArrayList<String>());
-            logEntries = new ConcurrentLinkedQueue<String>();
+            logEntries = new ConcurrentLinkedQueue<>();
             cacheRunner = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while (true) {
-//                        cacheBlocked = true;
                         if (!logEntries.isEmpty()) {
                             String logEntry = logEntries.poll();
                             writeToFile(logEntry);
                         }
-//                        cacheBlocked = false;
 
                         try {
                             Thread.sleep(10);

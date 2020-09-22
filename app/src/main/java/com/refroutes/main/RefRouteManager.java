@@ -135,6 +135,18 @@ public class RefRouteManager {
         return mtiCalls.initMti(context);
     }
 
+    public boolean isMapTripStarted() {
+        return mtiCalls.isMapTripStarted();
+    }
+
+    public ApiError waitForMapTripStart() {
+        return mtiCalls.waitForMapTripStart();
+    }
+
+    public boolean isMtiInitialized() {
+        return mtiCalls.isMtiInitialized();
+    }
+
     public ApiError findServer() {
         return mtiCalls.findServer();
     }

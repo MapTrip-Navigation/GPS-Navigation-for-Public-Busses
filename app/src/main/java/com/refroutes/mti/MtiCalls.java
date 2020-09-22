@@ -17,17 +17,19 @@ import de.infoware.android.mti.extension.MTIHelper;
 @WorkerThread
 public class MtiCalls implements ApiListener, NavigationListener {
     public static int CALLBACK_ON_ERROR = -1;
-    public static int CALLBACK_INIT = -2;
-    public static int CALLBACK_UNINIT = -3;
-    public static int CALLBACK_SHOW_APP = -4;
-    public static int CALLBACK_DESTINATION_REACHED = -5;
-    public static int CALLBACK_STOP_NAVIGATION = -6;
-    public static int CALLBACK_STATUS_INFO = -7;
-    public static int CALLBACK_INFO = -8;
+    public static int CALLBACK_MAPTRIP_STARTED = -2;
+    public static int CALLBACK_INIT = -3;
+    public static int CALLBACK_UNINIT = -4;
+    public static int CALLBACK_SHOW_APP = -5;
+    public static int CALLBACK_DESTINATION_REACHED = -6;
+    public static int CALLBACK_STOP_NAVIGATION = -7;
+    public static int CALLBACK_STATUS_INFO = -8;
+    public static int CALLBACK_INFO = -9;
     public static int CALLBACK_CUSTOM_FUNCTION = -10;
 
     private RefRouteManager refRouteManager;
     private static boolean isMtiInitialized = false;
+    private static boolean isMapTripStarted = false;
     private Logger logger = Logger.createLogger("MtiCalls");
 
     // for demo purposes only
@@ -63,28 +65,30 @@ public class MtiCalls implements ApiListener, NavigationListener {
         return result;
     }
 
-    /**
-     * Initializes the MTI interface.
-     * Waits until MTI is available. Means that this can block the whole App.
-     * @return ApiError.OK
-     */
-    public ApiError initMtiDemo(Context context) throws InterruptedException {
-        MTIHelper.initialize(context);
-        Api.registerListener(this);
-        Navigation.registerListener(this);
-        Api.init();
-        while (!isMtiInitialized) {
-            Thread.sleep(1000);
-            System.out.println("waiting");
-        }
-        return ApiError.OK;
+    public boolean isMapTripStarted() {
+        return isMapTripStarted;
     }
 
+    public boolean isMtiInitialized() {
+        return isMtiInitialized;
+    }
+
+    public ApiError waitForMapTripStart() {
+        if (isMapTripStarted) {
+            return ApiError.OK;
+        }
+
+        ApiError result = MtiCallbackSynchronizer.wait(CALLBACK_MAPTRIP_STARTED, "Api::infoMsg", null);
+        if (ApiError.OK == result) {
+            isMapTripStarted = true;
+        }
+        return result;
+    }
 
     public ApiError findServer() {
         logger.finest("findServer", "findServer()");
         int findServerId = Api.findServer();
-        return MtiCallbackSynchronizer.wait(findServerId, "Api.findServer", 500L);
+        return MtiCallbackSynchronizer.wait(findServerId, "Api::findServer", 500L);
     }
 
     public ApiError startReferenceRoute(String refRouteFileName, boolean restartTour, Long waitTime) {
@@ -96,7 +100,7 @@ public class MtiCalls implements ApiListener, NavigationListener {
             }
         }
         int startReferenceRouteId = Navigation.startReferenceRoute(refRouteFileName, restartTour);
-        return MtiCallbackSynchronizer.wait(startReferenceRouteId, "Navigation.startReferenceRoute", waitTime);
+        return MtiCallbackSynchronizer.wait(startReferenceRouteId, "Navigation::startReferenceRoute", waitTime);
     }
 
     /**
@@ -123,13 +127,13 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     public ApiError getCurrentDestination(Long waitTime) {
         int getCurrentDestinationId = Navigation.getCurrentDestination();
-        return MtiCallbackSynchronizer.wait(getCurrentDestinationId, "Navigation.getCurrentDestination", waitTime);
+        return MtiCallbackSynchronizer.wait(getCurrentDestinationId, "Navigation::getCurrentDestination", waitTime);
     }
 
     public ApiError stopNavigation(Long waitTime){
         int stopNavigationId =  Navigation.stopNavigation();
         if (null != waitTime) {
-            return MtiCallbackSynchronizer.wait(stopNavigationId, "Navigation.stopNavigation", waitTime);
+            return MtiCallbackSynchronizer.wait(stopNavigationId, "Navigation::stopNavigation", waitTime);
         }
         return ApiError.OK;
     }
@@ -154,17 +158,19 @@ public class MtiCalls implements ApiListener, NavigationListener {
 
     private void uninitMti() {
         Api.uninit();
-        MtiCallbackSynchronizer.wait(CALLBACK_UNINIT, "Api.uninit", 5000L);
+        MtiCallbackSynchronizer.wait(CALLBACK_UNINIT, "Api::uninit", 5000L);
+        isMapTripStarted = false;
+        isMtiInitialized = false;
     }
 
     public ApiError hideServer (Long waitTime) {
         int hideServerRequestId = Api.hideServer();
-        return MtiCallbackSynchronizer.wait(hideServerRequestId, "Api.hideServer", waitTime);
+        return MtiCallbackSynchronizer.wait(hideServerRequestId, "Api::hideServer", waitTime);
     }
 
     public ApiError showApp (String packageName, String className, Long waitTime) {
         int hideServerRequestId = Api.showApp(packageName, className);
-        return MtiCallbackSynchronizer.wait(hideServerRequestId, "Api.showApp", null);
+        return MtiCallbackSynchronizer.wait(hideServerRequestId, "Api::showApp", null);
     }
 
     public void showMessageButton () {
@@ -268,7 +274,15 @@ public class MtiCalls implements ApiListener, NavigationListener {
     @Override
     public void infoMsg(Info info, int i) {
         logger.finest("infoMsg", "Callback: infoFromSDK: " + info);
-        refRouteManager.setMessageButtonClicked(true);
+        switch (info) {
+            case MAPTRIP_STARTED:
+                MtiCallbackSynchronizer.callBackCalled(CALLBACK_MAPTRIP_STARTED, info.MAPTRIP_STARTED.name(), null, "infoMsg");
+                break;
+
+            default:
+                refRouteManager.setMessageButtonClicked(true);
+                break;
+        }
     }
 
     @Override

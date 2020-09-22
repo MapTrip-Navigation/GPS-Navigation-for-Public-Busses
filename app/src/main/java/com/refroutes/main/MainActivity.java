@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -57,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private boolean isRoutingActive = false;
     private boolean isPaused = false;
     private boolean pauseButtonWasClicked = false;
-    private boolean mtiInitialized = false;
 
     private RefRouteManager refRouteManager;
     private Logger logger;
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private void reactToMessageButton() {
         // showMessageButton is part of MTI
         // MTI must be initialized before using the MessageButton
-        if (!mtiInitialized) {
+        if (!refRouteManager.isMtiInitialized()) {
             return;
         }
         refRouteManager.showMessageButton();
@@ -387,6 +387,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     /**
      * To keep the switch from MapTrip to this view simple, this App is a singleTask (see Manifest)
      */
+    @WorkerThread
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Lookup the recyclerview in activity layout
@@ -484,7 +485,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
                 // Show user that he can start
                 activateGoButton(refRoutes.size() > 0);
-                mtiInitialized = true;
                 break;
 
             default:
@@ -672,7 +672,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private void initMti(final MainActivity activity, final RefRouteManager refRouteManager, final boolean startMapTripRequested) {
         logger.info("initMti", "Initializing MTI");
 
-        if (mtiInitialized) {
+        if (refRouteManager.isMtiInitialized()) {
             return;
         }
         mtiThread = new Thread(new Runnable() {
